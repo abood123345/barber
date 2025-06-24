@@ -24,10 +24,10 @@ import Profile from "./pages/Profile";
 // Dashboard
 import Dashboard from "./pages/Dashboard";
 import DashboardAppointments from "./pages/dashboard/Appointments";
-// import DashboardServices from './pages/dashboard/Services';
-// import DashboardCustomers from "./pages/dashboard/Customers";
-// import DashboardBarbers from "./pages/dashboard/Barbers";
-// import DashboardAnalytics from "./pages/dashboard/Analytics";
+import DashboardServices from "./pages/dashboard/Services";
+import DashboardCustomers from "./pages/dashboard/Customers";
+import DashboardBarbers from "./pages/dashboard/Barbers";
+import DashboardAnalytics from "./pages/dashboard/Analytics";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole }) => {
@@ -95,7 +95,7 @@ const AppContent = () => {
               </ProtectedRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/dashboard/services"
             element={
               <ProtectedRoute requiredRole="admin">
@@ -126,7 +126,7 @@ const AppContent = () => {
                 <DashboardAnalytics />
               </ProtectedRoute>
             }
-          /> */}
+          />
         </Routes>
       </main>
       <Footer />

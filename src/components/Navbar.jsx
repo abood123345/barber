@@ -9,7 +9,8 @@ import {
   Settings, 
   LogOut,
   Globe,
-  BarChart3
+  BarChart3,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -34,6 +35,12 @@ const Navbar = () => {
     { path: '/', label: t('home') },
     { path: '/services', label: t('services') },
     ...(user ? [{ path: '/booking', label: t('booking') }] : []),
+  ];
+
+  const languages = [
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'he', name: 'עברית', flag: '🇮🇱' },
   ];
 
   return (
@@ -70,12 +77,46 @@ const Navbar = () => {
           {/* Right Side */}
           <div className="hidden md:flex items-center space-x-4 space-x-reverse">
             {/* Language Toggle */}
-            <button
-              onClick={() => changeLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="p-2 text-gray-300 hover:text-white transition-colors"
-            >
-              <Globe className="w-5 h-5" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="p-2 text-gray-300 hover:text-white transition-colors flex items-center"
+              >
+                <Globe className="w-5 h-5 ml-1" />
+                <span className="text-sm">
+                  {languages.find(l => l.code === language)?.flag}
+                </span>
+              </button>
+              
+              <AnimatePresence>
+                {showUserMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-40 bg-dark-800 rounded-lg shadow-xl border border-primary-500/20 py-2"
+                  >
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          changeLanguage(lang.code);
+                          setShowUserMenu(false);
+                        }}
+                        className={`w-full text-right px-4 py-2 text-sm transition-colors flex items-center ${
+                          language === lang.code
+                            ? 'text-primary-500 bg-primary-500/10'
+                            : 'text-gray-300 hover:text-white hover:bg-dark-700'
+                        }`}
+                      >
+                        <span className="ml-2">{lang.flag}</span>
+                        {lang.name}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {user ? (
               <div className="relative">
@@ -109,14 +150,27 @@ const Navbar = () => {
                       </Link>
                       
                       {(user.role === 'admin' || user.role === 'barber') && (
-                        <Link
-                          to="/dashboard"
-                          className="flex items-center space-x-2 space-x-reverse px-4 py-2 text-gray-300 hover:text-white hover:bg-dark-700 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <BarChart3 className="w-4 h-4" />
-                          <span>{t('dashboard')}</span>
-                        </Link>
+                        <>
+                          <Link
+                            to="/dashboard"
+                            className="flex items-center space-x-2 space-x-reverse px-4 py-2 text-gray-300 hover:text-white hover:bg-dark-700 transition-colors"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <BarChart3 className="w-4 h-4" />
+                            <span>{t('dashboard')}</span>
+                          </Link>
+                          
+                          {user.role === 'admin' && (
+                            <Link
+                              to="/dashboard/time-management"
+                              className="flex items-center space-x-2 space-x-reverse px-4 py-2 text-gray-300 hover:text-white hover:bg-dark-700 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Clock className="w-4 h-4" />
+                              <span>{t('timeManagement')}</span>
+                            </Link>
+                          )}
+                        </>
                       )}
 
                       <Link
@@ -179,6 +233,29 @@ const Navbar = () => {
             className="md:hidden bg-dark-800 border-t border-primary-500/20"
           >
             <div className="px-4 py-4 space-y-4">
+              {/* Language Selection */}
+              <div className="border-b border-dark-700 pb-4">
+                <p className="text-gray-400 text-sm mb-2">اللغة / Language / שפה</p>
+                <div className="flex space-x-2 space-x-reverse">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        changeLanguage(lang.code);
+                        setIsOpen(false);
+                      }}
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
+                        language === lang.code
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-dark-700 text-gray-300 hover:text-white'
+                      }`}
+                    >
+                      {lang.flag} {lang.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {navItems.map((item) => (
                 <Link
                   key={item.path}
@@ -204,13 +281,24 @@ const Navbar = () => {
                     {t('profile')}
                   </Link>
                   {(user.role === 'admin' || user.role === 'barber') && (
-                    <Link
-                      to="/dashboard"
-                      className="block text-gray-300 hover:text-white transition-colors"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {t('dashboard')}
-                    </Link>
+                    <>
+                      <Link
+                        to="/dashboard"
+                        className="block text-gray-300 hover:text-white transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {t('dashboard')}
+                      </Link>
+                      {user.role === 'admin' && (
+                        <Link
+                          to="/dashboard/time-management"
+                          className="block text-gray-300 hover:text-white transition-colors"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {t('timeManagement')}
+                        </Link>
+                      )}
+                    </>
                   )}
                   <button
                     onClick={handleLogout}

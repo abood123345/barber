@@ -58,6 +58,7 @@ const translations = {
     totalRevenue: 'إجمالي الإيرادات',
     todayAppointments: 'مواعيد اليوم',
     totalCustomers: 'إجمالي العملاء',
+    timeManagement: 'إدارة الأوقات',
   },
   en: {
     // Navigation
@@ -106,6 +107,56 @@ const translations = {
     totalRevenue: 'Total Revenue',
     todayAppointments: 'Today\'s Appointments',
     totalCustomers: 'Total Customers',
+    timeManagement: 'Time Management',
+  },
+  he: {
+    // Navigation
+    home: 'בית',
+    services: 'שירותים',
+    booking: 'קביעת תור',
+    login: 'התחברות',
+    register: 'הרשמה',
+    profile: 'פרופיל',
+    dashboard: 'לוח בקרה',
+    logout: 'התנתקות',
+    
+    // Common
+    continue: 'המשך',
+    cancel: 'ביטול',
+    save: 'שמירה',
+    edit: 'עריכה',
+    delete: 'מחיקה',
+    confirm: 'אישור',
+    loading: 'טוען...',
+    
+    // Home
+    heroTitle: 'מספרה הטובה ביותר בעיר',
+    heroSubtitle: 'קבע תור עכשיו ותיהנה משירותי התספורת והטיפוח הטובים ביותר',
+    bookNow: 'קבע תור',
+    
+    // Services
+    servicesTitle: 'השירותים שלנו',
+    haircut: 'תספורת',
+    beard: 'עיצוב זקן',
+    styling: 'עיצוב שיער',
+    treatment: 'טיפולי שיער',
+    package: 'חבילות מיוחדות',
+    
+    // Booking
+    selectService: 'בחירת שירות',
+    selectBarber: 'בחירת ספר',
+    selectDateTime: 'בחירת תאריך ושעה',
+    bookingConfirmation: 'אישור הזמנה',
+    
+    // Dashboard
+    appointments: 'תורים',
+    customers: 'לקוחות',
+    barbers: 'ספרים',
+    analytics: 'אנליטיקה',
+    totalRevenue: 'סך הכנסות',
+    todayAppointments: 'תורי היום',
+    totalCustomers: 'סך לקוחות',
+    timeManagement: 'ניהול זמנים',
   }
 };
 
@@ -115,8 +166,8 @@ export const LanguageProvider = ({ children }) => {
 
   const changeLanguage = (lang) => {
     setLanguage(lang);
-    setDirection(lang === 'ar' ? 'rtl' : 'ltr');
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    setDirection(lang === 'ar' || lang === 'he' ? 'rtl' : 'ltr');
+    document.documentElement.dir = lang === 'ar' || lang === 'he' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
   };
 

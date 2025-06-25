@@ -28,6 +28,7 @@ import DashboardServices from "./pages/dashboard/Services";
 import DashboardCustomers from "./pages/dashboard/Customers";
 import DashboardBarbers from "./pages/dashboard/Barbers";
 import DashboardAnalytics from "./pages/dashboard/Analytics";
+import TimeManagement from "./pages/dashboard/TimeManagement";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole }) => {
@@ -124,6 +125,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute requiredRole="admin">
                 <DashboardAnalytics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/time-management"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <TimeManagement />
               </ProtectedRoute>
             }
           />

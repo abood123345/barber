@@ -12,6 +12,9 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
+  Plus,
+  Save,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -21,23 +24,43 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 
 const DashboardAppointments = () => {
   const [appointments, setAppointments] = useState([]);
+  const [services, setServices] = useState([]);
+  const [barbers, setBarbers] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newAppointment, setNewAppointment] = useState({
+    customer: '',
+    barber: '',
+    service: '',
+    date: '',
+    time: '',
+    notes: '',
+    status: 'pending'
+  });
 
   useEffect(() => {
-    fetchAppointments();
+    fetchData();
   }, []);
 
-  const fetchAppointments = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:8090/api/appointments"
-      );
-      setAppointments(response.data);
+      const [appointmentsRes, servicesRes, barbersRes, customersRes] = await Promise.all([
+        axios.get("http://localhost:8090/api/appointments"),
+        axios.get("http://localhost:8090/api/services"),
+        axios.get("http://localhost:8090/api/barbers"),
+        axios.get("http://localhost:8090/api/customers")
+      ]);
+      
+      setAppointments(appointmentsRes.data);
+      setServices(servicesRes.data);
+      setBarbers(barbersRes.data);
+      setCustomers(customersRes.data);
     } catch (error) {
-      console.error("Error fetching appointments:", error);
-      toast.error("حدث خطأ في تحميل المواعيد");
+      console.error("Error fetching data:", error);
+      toast.error("حدث خطأ في تحميل البيانات");
     } finally {
       setLoading(false);
     }
@@ -68,6 +91,35 @@ const DashboardAppointments = () => {
     } catch (error) {
       console.error("Error deleting appointment:", error);
       toast.error("حدث خطأ في حذف الموعد");
+    }
+  };
+
+  const handleAddAppointment = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const selectedService = services.find(s => s._id === newAppointment.service);
+      const appointmentData = {
+        ...newAppointment,
+        totalPrice: selectedService?.price || 0
+      };
+
+      const response = await axios.post('/api/appointments', appointmentData);
+      setAppointments(prev => [response.data, ...prev]);
+      setShowAddModal(false);
+      setNewAppointment({
+        customer: '',
+        barber: '',
+        service: '',
+        date: '',
+        time: '',
+        notes: '',
+        status: 'pending'
+      });
+      toast.success('تم إضافة الموعد بنجاح');
+    } catch (error) {
+      console.error('Error adding appointment:', error);
+      toast.error('حدث خطأ في إضافة الموعد');
     }
   };
 
@@ -136,10 +188,19 @@ const DashboardAppointments = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-8"
+          className="flex justify-between items-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">إدارة المواعيد</h1>
-          <p className="text-gray-400">عرض وإدارة جميع مواعيد الصالون</p>
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">إدارة المواعيد</h1>
+            <p className="text-gray-400">عرض وإدارة جميع مواعيد الصالون</p>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition-all flex items-center"
+          >
+            <Plus className="w-5 h-5 ml-2" />
+            إضافة موعد جديد
+          </button>
         </motion.div>
 
         {/* Filters and Search */}
@@ -340,6 +401,184 @@ const DashboardAppointments = () => {
             ))
           )}
         </div>
+
+        {/* Add Appointment Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-dark-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <h2 className="text-2xl font-bold text-white mb-6">إضافة موعد جديد</h2>
+
+              <form onSubmit={handleAddAppointment} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      العميل *
+                    </label>
+                    <select
+                      value={newAppointment.customer}
+                      onChange={(e) =>
+                        setNewAppointment({ ...newAppointment, customer: e.target.value })
+                      }
+                      required
+                      className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                    >
+                      <option value="">اختر العميل</option>
+                      {customers.map((customer) => (
+                        <option key={customer._id} value={customer._id}>
+                          {customer.firstName} {customer.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      الحلاق *
+                    </label>
+                    <select
+                      value={newAppointment.barber}
+                      onChange={(e) =>
+                        setNewAppointment({ ...newAppointment, barber: e.target.value })
+                      }
+                      required
+                      className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                    >
+                      <option value="">اختر الحلاق</option>
+                      {barbers.map((barber) => (
+                        <option key={barber._id} value={barber._id}>
+                          {barber.firstName} {barber.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-white font-medium mb-2">
+                    الخدمة *
+                  </label>
+                  <select
+                    value={newAppointment.service}
+                    onChange={(e) =>
+                      setNewAppointment({ ...newAppointment, service: e.target.value })
+                    }
+                    required
+                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                  >
+                    <option value="">اختر الخدمة</option>
+                    {services.map((service) => (
+                      <option key={service._id} value={service._id}>
+                        {service.nameAr} - {service.price} ريال
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      التاريخ *
+                    </label>
+                    <input
+                      type="date"
+                      value={newAppointment.date}
+                      onChange={(e) =>
+                        setNewAppointment({ ...newAppointment, date: e.target.value })
+                      }
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      الوقت *
+                    </label>
+                    <select
+                      value={newAppointment.time}
+                      onChange={(e) =>
+                        setNewAppointment({ ...newAppointment, time: e.target.value })
+                      }
+                      required
+                      className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                    >
+                      <option value="">اختر الوقت</option>
+                      {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'].map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-white font-medium mb-2">
+                    ملاحظات
+                  </label>
+                  <textarea
+                    value={newAppointment.notes}
+                    onChange={(e) =>
+                      setNewAppointment({ ...newAppointment, notes: e.target.value })
+                    }
+                    rows={3}
+                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                    placeholder="أي ملاحظات إضافية..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white font-medium mb-2">
+                    حالة الموعد
+                  </label>
+                  <select
+                    value={newAppointment.status}
+                    onChange={(e) =>
+                      setNewAppointment({ ...newAppointment, status: e.target.value })
+                    }
+                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                  >
+                    <option value="pending">في الانتظار</option>
+                    <option value="confirmed">مؤكد</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end space-x-4 space-x-reverse">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setNewAppointment({
+                        customer: '',
+                        barber: '',
+                        service: '',
+                        date: '',
+                        time: '',
+                        notes: '',
+                        status: 'pending'
+                      });
+                    }}
+                    className="px-6 py-3 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-600 transition-all"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-all flex items-center"
+                  >
+                    <Save className="w-4 h-4 ml-2" />
+                    إضافة الموعد
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   );

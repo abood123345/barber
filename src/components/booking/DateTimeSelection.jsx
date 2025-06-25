@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import {
@@ -14,43 +14,62 @@ import { ar } from "date-fns/locale";
 const DateTimeSelection = ({ data, updateData, onNext, onPrev }) => {
   const [selectedDate, setSelectedDate] = useState(data.date || new Date());
   const [selectedTime, setSelectedTime] = useState(data.time || null);
+  const [availableDays, setAvailableDays] = useState([]);
+  const [availableTimes, setAvailableTimes] = useState([]);
 
-  // Generate next 14 days
+  useEffect(() => {
+    loadAvailableSchedule();
+  }, []);
+
+  const loadAvailableSchedule = () => {
+    // Load from localStorage (in real app, this would come from API)
+    const savedDays = localStorage.getItem('workingDays');
+    const savedSlots = localStorage.getItem('timeSlots');
+    
+    if (savedDays) {
+      const workingDays = JSON.parse(savedDays);
+      setAvailableDays(workingDays.filter(day => day.enabled));
+    } else {
+      // Default working days
+      setAvailableDays([
+        { id: 'sunday', name: 'الأحد', enabled: true },
+        { id: 'monday', name: 'الاثنين', enabled: true },
+        { id: 'tuesday', name: 'الثلاثاء', enabled: true },
+        { id: 'wednesday', name: 'الأربعاء', enabled: true },
+        { id: 'thursday', name: 'الخميس', enabled: true },
+      ]);
+    }
+    
+    if (savedSlots) {
+      const timeSlots = JSON.parse(savedSlots);
+      setAvailableTimes(timeSlots.filter(slot => slot.enabled).map(slot => slot.time));
+    } else {
+      // Default time slots
+      setAvailableTimes([
+        "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+        "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
+        "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
+      ]);
+    }
+  };
+
+  // Generate next 14 days, filtering by available working days
   const generateDates = () => {
     const dates = [];
     const today = new Date();
-    for (let i = 0; i < 14; i++) {
-      dates.push(addDays(today, i));
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    
+    for (let i = 0; i < 30; i++) { // Check 30 days to get 14 working days
+      const date = addDays(today, i);
+      const dayName = dayNames[date.getDay()];
+      
+      if (availableDays.some(day => day.id === dayName)) {
+        dates.push(date);
+        if (dates.length >= 14) break; // Stop when we have 14 working days
+      }
     }
     return dates;
   };
-
-  // Available time slots
-  const timeSlots = [
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "12:00",
-    "12:30",
-    "14:00",
-    "14:30",
-    "15:00",
-    "15:30",
-    "16:00",
-    "16:30",
-    "17:00",
-    "17:30",
-    "18:00",
-    "18:30",
-    "19:00",
-    "19:30",
-    "20:00",
-    "20:30",
-    "21:00",
-  ];
 
   const dates = generateDates();
 
@@ -147,7 +166,7 @@ const DateTimeSelection = ({ data, updateData, onNext, onPrev }) => {
           اختر الوقت
         </h4>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-          {timeSlots?.map((time, index) => {
+          {availableTimes?.map((time, index) => {
             const isAvailable = isTimeSlotAvailable(time);
             return (
               <motion.button

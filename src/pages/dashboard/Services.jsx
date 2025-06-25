@@ -26,8 +26,10 @@ const DashboardServices = () => {
   const [formData, setFormData] = useState({
     name: "",
     nameAr: "",
+    nameHe: "",
     description: "",
     descriptionAr: "",
+    descriptionHe: "",
     price: "",
     duration: "",
     category: "haircut",
@@ -36,12 +38,12 @@ const DashboardServices = () => {
   });
 
   const categories = [
-    { id: "all", name: "جميع الخدمات" },
-    { id: "haircut", name: "قص الشعر" },
-    { id: "beard", name: "تهذيب اللحية" },
-    { id: "styling", name: "تصفيف الشعر" },
-    { id: "treatment", name: "علاجات الشعر" },
-    { id: "package", name: "باقات خاصة" },
+    { id: "all", name: "جميع الخدمات", nameHe: "כל השירותים" },
+    { id: "haircut", name: "قص الشعر", nameHe: "תספורת" },
+    { id: "beard", name: "تهذيب اللحية", nameHe: "עיצוב זקן" },
+    { id: "styling", name: "تصفيف الشعر", nameHe: "עיצוב שיער" },
+    { id: "treatment", name: "علاجات الشعر", nameHe: "טיפולי שיער" },
+    { id: "package", name: "باقات خاصة", nameHe: "חבילות מיוחדות" },
   ];
 
   useEffect(() => {
@@ -51,10 +53,12 @@ const DashboardServices = () => {
   const fetchServices = async () => {
     try {
       const response = await axios.get("http://localhost:8090/api/services");
-      setServices(response.data);
+      console.log('Fetched services:', response.data); // Debug log
+      setServices(response.data || []);
     } catch (error) {
       console.error("Error fetching services:", error);
       toast.error("حدث خطأ في تحميل الخدمات");
+      setServices([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -85,14 +89,16 @@ const DashboardServices = () => {
     setEditingService(service);
     setFormData({
       name: service.name || "",
-      nameAr: service.nameAr,
+      nameAr: service.nameAr || "",
+      nameHe: service.nameHe || "",
       description: service.description || "",
-      descriptionAr: service.descriptionAr,
-      price: service.price.toString(),
-      duration: service.duration.toString(),
-      category: service.category,
+      descriptionAr: service.descriptionAr || "",
+      descriptionHe: service.descriptionHe || "",
+      price: service.price?.toString() || "",
+      duration: service.duration?.toString() || "",
+      category: service.category || "haircut",
       image: service.image || "",
-      isActive: service.isActive,
+      isActive: service.isActive !== undefined ? service.isActive : true,
     });
     setShowModal(true);
   };
@@ -133,8 +139,10 @@ const DashboardServices = () => {
     setFormData({
       name: "",
       nameAr: "",
+      nameHe: "",
       description: "",
       descriptionAr: "",
+      descriptionHe: "",
       price: "",
       duration: "",
       category: "haircut",
@@ -147,8 +155,9 @@ const DashboardServices = () => {
 
   const filteredServices = services.filter((service) => {
     const matchesSearch =
-      service.nameAr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      service.nameAr?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.nameHe?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === "all" || service.category === selectedCategory;
     return matchesSearch && matchesCategory;
@@ -178,6 +187,81 @@ const DashboardServices = () => {
             إضافة خدمة جديدة
           </button>
         </motion.div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-dark-800/50 rounded-lg p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">إجمالي الخدمات</p>
+                <p className="text-white text-2xl font-bold">{services.length}</p>
+              </div>
+              <Star className="w-8 h-8 text-primary-500" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-dark-800/50 rounded-lg p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">خدمات نشطة</p>
+                <p className="text-white text-2xl font-bold">
+                  {services.filter(s => s.isActive).length}
+                </p>
+              </div>
+              <Eye className="w-8 h-8 text-green-500" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-dark-800/50 rounded-lg p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">متوسط السعر</p>
+                <p className="text-white text-2xl font-bold">
+                  {services.length > 0 
+                    ? Math.round(services.reduce((sum, s) => sum + (s.price || 0), 0) / services.length)
+                    : 0
+                  } ريال
+                </p>
+              </div>
+              <DollarSign className="w-8 h-8 text-yellow-500" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-dark-800/50 rounded-lg p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">متوسط المدة</p>
+                <p className="text-white text-2xl font-bold">
+                  {services.length > 0 
+                    ? Math.round(services.reduce((sum, s) => sum + (s.duration || 0), 0) / services.length)
+                    : 0
+                  } دقيقة
+                </p>
+              </div>
+              <Clock className="w-8 h-8 text-blue-500" />
+            </div>
+          </motion.div>
+        </div>
 
         {/* Filters */}
         <motion.div
@@ -234,6 +318,9 @@ const DashboardServices = () => {
                   </h3>
                   {service.name && (
                     <p className="text-gray-400 text-sm">{service.name}</p>
+                  )}
+                  {service.nameHe && (
+                    <p className="text-gray-400 text-sm">{service.nameHe}</p>
                   )}
                 </div>
                 <div className="flex items-center space-x-2 space-x-reverse">
@@ -312,7 +399,12 @@ const DashboardServices = () => {
             <h3 className="text-white font-semibold text-lg mb-2">
               لا توجد خدمات
             </h3>
-            <p className="text-gray-400">لا توجد خدمات تطابق معايير البحث</p>
+            <p className="text-gray-400">
+              {services.length === 0 
+                ? "لم يتم إضافة أي خدمات بعد. ابدأ بإضافة خدمة جديدة."
+                : "لا توجد خدمات تطابق معايير البحث"
+              }
+            </p>
           </motion.div>
         )}
 
@@ -329,7 +421,7 @@ const DashboardServices = () => {
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-white font-medium mb-2">
                       اسم الخدمة (عربي) *
@@ -353,6 +445,19 @@ const DashboardServices = () => {
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
+                      }
+                      className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      اسم الخدمة (עברית)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nameHe}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nameHe: e.target.value })
                       }
                       className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
                     />
@@ -382,6 +487,20 @@ const DashboardServices = () => {
                     value={formData.description}
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
+                    }
+                    rows={3}
+                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white font-medium mb-2">
+                    وصف الخدمة (עברית)
+                  </label>
+                  <textarea
+                    value={formData.descriptionHe}
+                    onChange={(e) =>
+                      setFormData({ ...formData, descriptionHe: e.target.value })
                     }
                     rows={3}
                     className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"

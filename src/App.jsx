@@ -12,6 +12,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoadingSpinner from "./components/LoadingSpinner";
+import DashboardLayout from "./components/DashboardLayout";
 
 // Pages
 import Home from "./pages/Home";
@@ -45,6 +46,21 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   return children;
 };
 
+// Dashboard Route Component
+const DashboardRoute = ({ children, requiredRole }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <LoadingSpinner />;
+
+  if (!user) return <Navigate to="/login" />;
+
+  if (requiredRole && user.role !== requiredRole && user.role !== "admin") {
+    return <Navigate to="/" />;
+  }
+
+  return <DashboardLayout>{children}</DashboardLayout>;
+};
+
 const AppContent = () => {
   const { loading } = useAuth();
 
@@ -52,93 +68,103 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900">
-      <Navbar />
-      <main className="pt-16">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+      <Routes>
+        {/* Public Routes with Navbar */}
+        <Route path="/" element={
+          <>
+            <Navbar />
+            <main className="pt-16">
+              <Home />
+            </main>
+            <Footer />
+          </>
+        } />
+        <Route path="/services" element={
+          <>
+            <Navbar />
+            <main className="pt-16">
+              <Services />
+            </main>
+            <Footer />
+          </>
+        } />
+        <Route path="/login" element={
+          <>
+            <Navbar />
+            <main className="pt-16">
+              <Login />
+            </main>
+            <Footer />
+          </>
+        } />
+        <Route path="/register" element={
+          <>
+            <Navbar />
+            <main className="pt-16">
+              <Register />
+            </main>
+            <Footer />
+          </>
+        } />
 
-          {/* Protected Routes */}
-          <Route
-            path="/booking"
-            element={
-              <ProtectedRoute>
-                <BookingSystem />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
+        {/* Protected Routes with Navbar */}
+        <Route path="/booking" element={
+          <ProtectedRoute>
+            <Navbar />
+            <main className="pt-16">
+              <BookingSystem />
+            </main>
+            <Footer />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Navbar />
+            <main className="pt-16">
+              <Profile />
+            </main>
+            <Footer />
+          </ProtectedRoute>
+        } />
 
-          {/* Dashboard Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/appointments"
-            element={
-              <ProtectedRoute>
-                <DashboardAppointments />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/services"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <DashboardServices />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/customers"
-            element={
-              <ProtectedRoute>
-                <DashboardCustomers />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/barbers"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <DashboardBarbers />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/analytics"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <DashboardAnalytics />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/time-management"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <TimeManagement />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </main>
-      <Footer />
+        {/* Dashboard Routes with Sidebar Layout */}
+        <Route path="/dashboard" element={
+          <DashboardRoute requiredRole="admin">
+            <Dashboard />
+          </DashboardRoute>
+        } />
+        <Route path="/dashboard/appointments" element={
+          <DashboardRoute>
+            <DashboardAppointments />
+          </DashboardRoute>
+        } />
+        <Route path="/dashboard/services" element={
+          <DashboardRoute requiredRole="admin">
+            <DashboardServices />
+          </DashboardRoute>
+        } />
+        <Route path="/dashboard/customers" element={
+          <DashboardRoute>
+            <DashboardCustomers />
+          </DashboardRoute>
+        } />
+        <Route path="/dashboard/barbers" element={
+          <DashboardRoute requiredRole="admin">
+            <DashboardBarbers />
+          </DashboardRoute>
+        } />
+        <Route path="/dashboard/analytics" element={
+          <DashboardRoute requiredRole="admin">
+            <DashboardAnalytics />
+          </DashboardRoute>
+        } />
+        <Route path="/dashboard/time-management" element={
+          <DashboardRoute requiredRole="admin">
+            <TimeManagement />
+          </DashboardRoute>
+        } />
+      </Routes>
+
       <Toaster
         position="top-right"
         toastOptions={{
